@@ -1,31 +1,55 @@
 import pygame
 import time
 import math
-from util import scale_images, blit_rotate_center
+from util import scale_images, blit_rotate_center, blit_text_center
+pygame.font.init()
 
 #Define and append to required scale the 2D racing game images
 grass = scale_images(pygame.image.load("game_images/grass.jpg"), 2.5)
-track = scale_images(pygame.image.load("game_images/track.png"), 0.9)
+track = scale_images(pygame.image.load("game_images/track.png"), 0.8)
 
-track_border = scale_images(pygame.image.load("game_images/track-border.png"), 0.9)
+track_border = scale_images(pygame.image.load("game_images/track-border.png"), 0.8)
 track_border_mask = pygame.mask.from_surface(track_border)
 #variable track_border_mask for identifying area covered by track border
 
 finish_line = pygame.image.load("game_images/finish.png")
 finish_line_mask = pygame.mask.from_surface(finish_line)
-finish_position = (130, 250)
+finish_position = (120, 230)
 
-purple_car = scale_images(pygame.image.load("game_images/purple-car.png"), 0.55)
-green_car = scale_images(pygame.image.load("game_images/green-car.png"), 0.55)
-red_car = scale_images(pygame.image.load("game_images/red-car.png"), 0.55)
-grey_car = scale_images(pygame.image.load("game_images/grey-car.png"), 0.55)
-white_car = scale_images(pygame.image.load("game_images/white-car.png"), 0.55)
+purple_car = scale_images(pygame.image.load("game_images/purple-car.png"), 0.50)
+green_car = scale_images(pygame.image.load("game_images/green-car.png"), 0.50)
+red_car = scale_images(pygame.image.load("game_images/red-car.png"), 0.50)
+grey_car = scale_images(pygame.image.load("game_images/grey-car.png"), 0.50)
+white_car = scale_images(pygame.image.load("game_images/white-car.png"), 0.50)
 
 # Define game window dimensions
 window_width, window_height = track.get_width(), track.get_height()
 
 window = pygame.display.set_mode((window_width, window_height))
 pygame.display.set_caption("2D Racing Game!")
+
+font = pygame.font.SysFont("arial", 40)
+
+class Gameinfo:
+    def __init__(self):
+        self.started = False
+        self.start_time = 0
+    
+    def reset(self):
+        self.started = False
+        self.start_time = time.time()
+
+    def start(self):
+        if not self.started:
+            self.started = True
+            self.start_time = time.time()
+    
+    def get_time(self):
+        if self.started:
+            return round(time.time() - self.start_time)
+        else:
+            return 0
+    
 
 #Define the car object which will be used for the player car instances.
 class Car:
@@ -82,7 +106,7 @@ class Car:
 
 class PlayerCar(Car):
     IMG = purple_car
-    starting_position = (180, 200)
+    starting_position = (170, 190)
 
     #Function to reduce the car's speed when user stops moving. 
     def reduce_speed(self):
@@ -94,9 +118,12 @@ class PlayerCar(Car):
         self.move()
 
 #Append and draw the images
-def draw(win, images, player_car):
+def draw(win, images, player_car, game_info):
     for image, position in images:
         win.blit(image, position)
+    
+    time_ellapsed = font.render(f"Time: {game_info.get_time()}s", 1, (255, 255, 255))
+    win.blit(time_ellapsed, (10, window_height - time_ellapsed.get_height() - 70))
 
     player_car.draw(win)
     pygame.display.update()
@@ -112,6 +139,7 @@ def player_movement(player_car):
         player_car.rotate(right=True)
     if keys[pygame.K_UP]:
         moved = True
+        game_info.start()
         player_car.forward_movement()
     if keys[pygame.K_DOWN]:
         moved = True
@@ -127,14 +155,14 @@ clock = pygame.time.Clock()
 frames_per_second = 60
 images = [(grass, (0, 0)), (track, (0, 0)), (finish_line, finish_position), (track_border, (0, 0))]
 player_car = PlayerCar(6, 6) #Passing max velocity and rotation velocity
-
+game_info = Gameinfo()
 
 while run:
     #Manage game's speed for each computer to 60 frames per second
     clock.tick(frames_per_second)
 
     # draw the game's images and objects
-    draw(window, images, player_car)
+    draw(window, images, player_car, game_info)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -152,7 +180,8 @@ while run:
         if finish_collision[1] == 0:
             player_car.track_border_collision()
         elif finish_collision[1] <= 1:
-            print("Congratulations, you finished the race.")
+            blit_text_center(window, font, "Congratulations, you finished the race.")
+            game_info.reset()
             player_car.restart()
        
 pygame.quit()
