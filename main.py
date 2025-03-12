@@ -1,7 +1,7 @@
 import pygame
 import time
 import math
-from util import scale_images, blit_rotate_center, blit_text_center
+from util import scale_images, blit_rotate_center
 pygame.font.init()
 
 #Define and append to required scale the 2D racing game images
@@ -34,10 +34,11 @@ class Gameinfo:
     def __init__(self):
         self.started = False
         self.start_time = 0
+        self.highest_score = None
     
     def reset(self):
         self.started = False
-        self.start_time = time.time()
+        self.start_time = 0
 
     def start(self):
         if not self.started:
@@ -49,6 +50,11 @@ class Gameinfo:
             return round(time.time() - self.start_time)
         else:
             return 0
+        
+    def update_high_score(self):
+        time_taken = self.get_time()
+        if self.highest_score is None or time_taken < self.highest_score:
+            self.highest_score = time_taken
     
 
 #Define the car object which will be used for the player car instances.
@@ -122,8 +128,12 @@ def draw(win, images, player_car, game_info):
     for image, position in images:
         win.blit(image, position)
     
-    time_ellapsed = font.render(f"Time: {game_info.get_time()}s", 1, (255, 255, 255))
+    time_ellapsed = font.render(f"Time: {game_info.get_time()}s", 1, (0, 0, 0))
     win.blit(time_ellapsed, (10, window_height - time_ellapsed.get_height() - 70))
+
+    highest_score_text =  "Best Time: --" if game_info.highest_score is None else f"Best Time: {game_info.highest_score}s"
+    best_time = font.render(highest_score_text, 1, (0, 0, 0)) #Render text color and content
+    win.blit(best_time, (10, window_height - best_time.get_height() - 40)) #Render text position on window
 
     player_car.draw(win)
     pygame.display.update()
@@ -180,7 +190,11 @@ while run:
         if finish_collision[1] == 0:
             player_car.track_border_collision()
         elif finish_collision[1] <= 1:
-            blit_text_center(window, font, "Congratulations, you finished the race.")
+            game_info.update_high_score()
+            # draw(window, images, player_car, game_info) 
+            # pygame.display.update()
+            # pygame.time.delay(3000)
+            
             game_info.reset()
             player_car.restart()
        
