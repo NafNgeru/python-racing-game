@@ -48,7 +48,6 @@ python main.py
 ```
 
 ## Known Issues
-- The game currently does not support AI-driven opponents.
 - Collision detection may need fine-tuning for better accuracy.
 
 ## Future Improvements
