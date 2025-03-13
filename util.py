@@ -1,5 +1,6 @@
 import pygame
 
+#Scaling function to ensure images correspond to the window and to each other.
 def scale_images(image, scale):
     size = round(image.get_width() * scale), round(image.get_height() * scale)
     return pygame.transform.scale(image, size)
